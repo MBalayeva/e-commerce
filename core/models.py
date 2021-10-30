@@ -33,9 +33,21 @@ class Item(models.Model):
             'slug': self.slug
         })
 
+    def get_add_to_cart_url(self):
+        return reverse('add_to_card', kwargs={
+            'slug': self.slug
+        })
+
 
 class OrderItem(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    user        = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    item        = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity    = models.IntegerField(default=1)
+    ordered     = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.quantity} of {self.item}"
 
 
 class Order(models.Model):
@@ -44,7 +56,7 @@ class Order(models.Model):
     items       = models.ManyToManyField(OrderItem)
     order_start = models.DateTimeField(auto_now_add=True)
     order_date  = models.DateTimeField()
-    ordered     = models.BooleanField(False)
+    ordered     = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user}'s order"
