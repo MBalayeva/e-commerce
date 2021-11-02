@@ -1,6 +1,6 @@
 from django.db import models
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, View
 from .models import Item, Order, OrderItem
 from django.utils import timezone
 from django.contrib import messages
@@ -14,6 +14,15 @@ class HomeView(ListView):
 class ItemDetailView(DetailView):
     model         = Item
     template_name = 'product.html'
+
+
+class OrderSummary(View):
+    def get(self, *wargs, **kwargs):
+        order = Order.objects.get(user=self.request.user, ordered=False)
+        context = {
+            "order": order
+        }
+        return render(self.request, 'order_summary.html', context)
 
 
 def checkout(request):
@@ -31,7 +40,7 @@ def add_item_to_card(request, slug):
             order_item.quantity += 1
             order_item.save()
             messages.info(request, "Item's quantity increased by one")
-            return redirect('product', slug=item.slug)
+            return redirect('order-summary')
         else:
             order.items.add(order_item)  
             messages.info(request, "Item's been added to the cart")
@@ -64,3 +73,33 @@ def remove_item_from_cart(request, slug):
     else:
         messages.info(request, "You don't have an active order")
         return redirect('product', slug=item.slug)
+
+
+def remove_single_item_from_cart(request, slug):
+    item = get_object_or_404(Item, slug=slug)
+    order_qs = Order.objects.filter(user=request.user, ordered=False)
+
+    if order_qs.exists():
+        order = order_qs[0]
+        if order.items.filter(item__slug=item.slug).exists():
+            order_item = OrderItem.objects.filter(
+                item=item,
+                user=request.user,
+                ordered=False
+            )[0]
+            if order_item.quantity > 1:
+                order_item.quantity -= 1
+                order_item.save()
+                messages.info(request, "Item's quantity decreased by one")
+            else: 
+                order.items.remove(order_item)  
+                messages.info(request, "Item's removed from cart")
+            return redirect('order-summary')
+        else:
+           messages.info(request, "Item's not in the cart")
+           return redirect('order-summary')
+    else:
+        messages.info(request, "You don't have an active order")
+        return redirect('order-summary')
+
+

@@ -49,6 +49,20 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} of {self.item}"
 
+    def get_item_total_price(self):
+        return self.quantity * self.item.price
+
+    def get_discounted_item_total_price(self):
+        return self.quantity * self.item.discount_price
+
+    def get_saved_amount(self):
+        return self.get_item_total_price() - self.get_discounted_item_total_price()
+
+    def get_total_item(self):
+        if self.item.discount_price: return self.get_discounted_item_total_price()
+
+        return self.get_item_total_price()
+
 
 class Order(models.Model):
     user        = models.ForeignKey(settings.AUTH_USER_MODEL,
@@ -60,3 +74,10 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.user}'s order"
+
+    def get_total_price(self):
+        total = 0
+        for item in self.items.all():
+            total += item.get_total_item()
+        return total
+

@@ -1,0 +1,65 @@
+{% extends "base.html" %}  
+
+{% block content %}
+    <!--Main layout-->
+    <main class="pt-5 mt-5">
+      <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Price</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% if order.items.exists %}
+            {% for order_item in order.items.all %}
+                <tr>
+                    <th scope="row">{{order_item.item.title}}</th>
+                    <td>{{order_item.item.price}}</td>
+                    <td>
+                        <a href="{% url 'remove_single_item_from_cart' order_item.item.slug %}"><i class="fas fa-minus"></i></a>
+                         {{order_item.quantity}} 
+                        <a  href="{% url 'add_to_card' order_item.item.slug %}"><i class="fas fa-plus"></i></a> </td>
+                    <td>
+                    {% if order_item.item.discount_price %}
+                        {{order_item.get_discounted_item_total_price}}
+                        <span class="badge blue ml-2">{{order_item.get_saved_amount}}</span>
+                    {% else %}
+                        {{order_item.get_item_total_price}}
+                    {% endif %}
+                        <a href="{% url 'remove_from_cart' order_item.item.slug %}" class="text-danger float-right">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td colspan="3"><b>Total Price</b></td>
+                    <td><b>{{order.get_total_price}}</b></td>
+                </tr>
+                <tr>
+                    <td colspan="4"><a href="{% url 'home' %}" class="btn btn-primary float-right d-inline-block mx-2">Back to shopping</a>
+                    <a href="{% url 'checkout' %}" class="btn btn-warning float-right">Proceed to checkout</a></td>
+                </tr>
+            {% else %}
+            <tr>
+                <td colspan="3"><b>No items in the cart</b></td>
+                <td colspan="4"><a href="{% url 'home' %}" class="btn btn-primary float-right d-inline-block mx-2">Back to shopping</a>    
+            </tr>
+            {% endif %}
+                
+
+                
+            </tbody>
+        </table>
+
+      </div>
+    <!--Main layout-->
+ {% endblock content %} 
+
+    
+
+  
